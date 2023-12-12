@@ -1,9 +1,10 @@
 import { FC, useState } from "react";
-import { BVHParser } from "../parser";
+import { BVHData } from "../parser";
 
 export interface SkeletonViewerProps {
-    data: BVHParser | undefined
+    data: BVHData | undefined
 }
+
 
 const SkeletonViewer = (props: SkeletonViewerProps) => {
     return (

@@ -45,20 +45,32 @@ type AnimationData = {
 }
 
 
-class BVHParser {
+class BVHData {
     bones: Map<number, BoneData>;
     channelLookup: Map<number, number>;
     animationData: AnimationData | null;
     frameTime: number;
     numFrames: number;
 
-    constructor() {
+    constructor(fileContents: string) {
+
         this.bones = new Map();
         this.channelLookup = new Map();
         this.animationData = null;
         this.frameTime = 0;
         this.numFrames = 0;
+    
+        this.bones.clear();
+        this.channelLookup.clear();
+
+        const sections = fileContents.split('MOTION');
+
+        this.parseSkeleton(sections[0]);    
+        this.parseAnimation(sections[1]);
+
+        console.log(this.bones);
     }
+
 
     parseSkeleton (skeletonDataString: string) {
         const lines = skeletonDataString.split('\n');
@@ -199,18 +211,6 @@ class BVHParser {
         });    
     }
     
-    parse (fileContents: string) {
-        this.bones.clear();
-        this.channelLookup.clear();
-
-        const sections = fileContents.split('MOTION');
-
-        this.parseSkeleton(sections[0]);    
-        this.parseAnimation(sections[1]);
-
-        console.log(this.bones);
-    }
-
     get skeletonData (): string {
         const boneData = Array.from(this.bones.entries());
 
@@ -223,5 +223,5 @@ class BVHParser {
 }
 
 export {
-    BVHParser
+    BVHData
 }

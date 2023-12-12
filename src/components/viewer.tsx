@@ -1,14 +1,14 @@
 import { Canvas } from "@react-three/fiber";
 import { FC, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
-import { BVHParser } from "../parser";
+import { BVHData } from "../parser";
 import SkeletonViewer from "./skeletonViewer";
 import '../App.css';
 
 const Viewer: FC = () => {
 
     const [output, setOutput] = useState('');
-    const [bvhData, setBVHData] = useState<BVHParser>();
+    const [bvhData, setBVHData] = useState<BVHData>();
 
     const loadFile = async (e:any) => {
         e.preventDefault();
@@ -17,12 +17,11 @@ const Viewer: FC = () => {
             if (e.target && e.target.result) {
                 const text = e.target.result.toString();
                 
-                const bvhParse = new BVHParser();
+                const bvhData = new BVHData(text);
 
-                bvhParse.parse(text);
-                setOutput(bvhParse.skeletonData);
+                setOutput(bvhData.skeletonData);
 
-                setBVHData(bvhParse);
+                setBVHData(bvhData);
             }
         }
         reader.readAsText(e.target.files[0]);   
