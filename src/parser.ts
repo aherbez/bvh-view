@@ -101,38 +101,22 @@ class BVHData {
         lines.forEach(l => {
             p = getParts(l);
             switch (p[0]) {
+                case '{':       // handled by the JOINT/ROOT/End Site lines 
                 case 'HEIRARCHY':
                     break;
                 case 'ROOT':
-                    currBone = newBone(p[1], null);
-                    boneLookup.set(p[1], currBone);
-                    this.bones.set(currBone.id, currBone);
-                    currParent = currBone;
-                    
-                    break;
                 case 'JOINT':
-                    /*
-                    if (currBone) {
-                        bones.push(currBone);
-                    }
-                    */
                     currBone = newBone(p[1], currParent);
                     boneLookup.set(p[1], currBone);
                     this.bones.set(currBone.id, currBone);
                     currParent = currBone;
                     break;
                 case 'End':
-                    /*
-                    if (currBone) {
-                        bones.push(currBone);
-                    }
-                    */
                     const endName = (currParent) ? `${currParent.name}-end` : 'end';
                     currBone = newBone(endName, currParent);
                     this.bones.set(currBone.id, currBone);
                     boneLookup.set(endName, currBone);
-                    break;
-                case '{':
+                    currParent = currBone;
                     break;
                 case '}':
                     // go up in the heirarchy

@@ -17,6 +17,7 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
     boneData.forEach(bData => {
         let b = new THREE.Bone();
         b.position.set(bData.offset[0], bData.offset[1], bData.offset[2]);
+        b.name = bData.name;
         boneLookup.set(bData.id, b);
         bones.push(b);
     });
@@ -27,6 +28,7 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
         let parent = boneLookup.get(bData.parent);
 
         if (!!parent && !!child) {
+            console.log(child.name, '->', parent.name);
             parent.add(child);
         }
     });
