@@ -15,9 +15,10 @@ const Viewer: FC = () => {
             if (e.target && e.target.result) {
                 const text = e.target.result.toString();
                 
-                setOutput(text);
+                // setOutput(text);
                 
-                parseBVH(text);
+                const res = parseBVH(text);
+                setOutput(res);
             }
         }
         reader.readAsText(e.target.files[0]);   
@@ -44,7 +45,7 @@ const Viewer: FC = () => {
             <textarea
                 rows={30}
                 cols={80}
-                value={output}
+                defaultValue={output}
             >
 
             </textarea>
