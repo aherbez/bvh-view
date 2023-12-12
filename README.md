@@ -9,7 +9,7 @@
 
 8:32    Setup automatic deploys via netlify 
 
-9:00    Setup basic scene w/ 3d view and button to load file ![screenshot 1]('https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_001.png')
+9:00    Setup basic scene w/ 3d view and button to load file ![screenshot 1](https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_001.png)
 
 9:15    Loading BVH file and dumping text to textarea as sanity check (screen_002.png)
         Starting in on actual parsing, starting with skeleton
