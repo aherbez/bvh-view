@@ -1,22 +1,31 @@
-import { FC, useState } from "react";
+import { useEffect, useRef } from "react";
 import { BVHData } from "../parser";
+import { buildSkeleton, SkeletonResult } from "../skeleton_utils";
 
 export interface SkeletonViewerProps {
     data: BVHData | undefined
 }
 
-
 const SkeletonViewer = (props: SkeletonViewerProps) => {
-    return (
-        <group>
-            {props.data && 
-                <mesh
-                    position={[0, 2, 0]}
-                >
-                    <sphereGeometry />
-                    <meshBasicMaterial color={"slateblue"} />
-                </mesh>
+    const root = useRef<any>();
+
+    useEffect(() => {
+        if (props.data) {
+            const res: SkeletonResult = buildSkeleton(props.data);
+
+            if (root.current) {
+                root.current.add(res.skeleton.bones[0]);
+                root.current.add(res.helper);    
             }
+        }
+
+    }, [props.data]);
+    
+
+    return (
+        <group
+            ref={root}
+        >
         </group>
     );
 }

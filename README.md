@@ -33,3 +33,6 @@
         class, rather than passing around the channelIndex->boneID map.
 
         Calling it a night- will setup a proper ThreeJS skeleton and animation channel tomorrow
+
+12:48   Couldn't help it- went ahead and set up a proper ThreeJS Skeleton from the data
+        and a SkeletonHelper to visualize it (screen_007.png)

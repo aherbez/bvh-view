@@ -29,7 +29,7 @@ const getChannels = (parts: string[]): string[] => {
     return parts.slice(2).map(p => normalizeChannelName(p));
 }
 
-type BoneData = {
+export type BoneData = {
     id: number,
     name: string,
     offset: number[],
@@ -48,17 +48,18 @@ type AnimationData = {
 class BVHData {
     bones: Map<number, BoneData>;
     channelLookup: Map<number, number>;
-    animationData: AnimationData | null;
-    frameTime: number;
-    numFrames: number;
+    animationData: AnimationData;
 
     constructor(fileContents: string) {
 
         this.bones = new Map();
         this.channelLookup = new Map();
-        this.animationData = null;
-        this.frameTime = 0;
-        this.numFrames = 0;
+
+        this.animationData = {
+            numFrames: 0,
+            frameTime: 0,
+            frameData: []
+        }
     
         this.bones.clear();
         this.channelLookup.clear();
@@ -67,8 +68,6 @@ class BVHData {
 
         this.parseSkeleton(sections[0]);    
         this.parseAnimation(sections[1]);
-
-        console.log(this.bones);
     }
 
 
@@ -164,8 +163,6 @@ class BVHData {
                     break;
             }
         });
-        console.log(this.bones);
-        console.log(this.channelLookup);
     }
 
     parseAnimation (animationDataString: string) {
@@ -180,13 +177,15 @@ class BVHData {
             const p = getParts(l);
             switch (p[0]) {
                 case 'Frames:':
-                    this.numFrames = parseInt(p[1]);
+                    this.animationData.numFrames = parseInt(p[1]);
                     break;
                 case 'Frame':
-                    this.frameTime = parseFloat(p[2]);
+                    this.animationData.frameTime = parseFloat(p[2]);
                     break;
                 default:
                     const vals = getPartsAsFloats(l);
+                    this.animationData.frameData.push(vals);
+
                     vals.forEach((v, i) => {
                         
                         let boneID = this.channelLookup.get(i);
@@ -213,7 +212,6 @@ class BVHData {
     
     get skeletonData (): string {
         const boneData = Array.from(this.bones.entries());
-
         return JSON.stringify(boneData, null, 2);
     }
 
