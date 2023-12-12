@@ -43,9 +43,6 @@ const parseBVH = (fileContents: string ):string => {
     
     const lines = sections[0].split('\n');
 
-    const boneNames = [];
-    const boneOffsets = [];
-    
     const bones: BoneInfo[] = [];
     let rootName: string;
     let currBone: BoneInfo | null = null;
