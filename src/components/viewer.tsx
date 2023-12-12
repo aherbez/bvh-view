@@ -7,6 +7,8 @@ import '../App.css';
 const Viewer: FC = () => {
 
     const [output, setOutput] = useState('');
+    const [output2, setOutput2] = useState('');
+
 
     const loadFile = async (e:any) => {
         e.preventDefault();
@@ -18,7 +20,8 @@ const Viewer: FC = () => {
                 // setOutput(text);
                 
                 const res = parseBVH(text);
-                setOutput(res);
+                setOutput(res[0]);
+                setOutput2(res[1]);
             }
         }
         reader.readAsText(e.target.files[0]);   
@@ -43,12 +46,15 @@ const Viewer: FC = () => {
             <input type="file" onChange={(e) => loadFile(e)} />
             <br />
             <textarea
-                rows={30}
+                rows={20}
                 cols={80}
                 defaultValue={output}
-            >
-
-            </textarea>
+            />
+            <textarea 
+                rows={20}
+                cols={80}
+                defaultValue={output2}
+            />
         </div>
     </div>
     );

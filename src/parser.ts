@@ -1,5 +1,13 @@
+const getLines = (s: string): string[] => {
+    return s.split(/[\n\r]/).filter(s => s !== '');
+}
+
 const getParts = (s: string): string[] => {
-    return s.split(/[\s]/).filter(s => s !== '');
+    return s.split(/[\s]/).map(s => s.trim()).filter(s => s !== '');
+}
+
+const getPartsAsFloats = (s: string): number[] => {
+    return getParts(s).map(s => parseFloat(s));
 }
 
 const getVector = (parts: string[]): number[] => {
@@ -30,25 +38,39 @@ const getChannels = (parts: string[]): string[] => {
     return parts.slice(2).map(p => normalizeChannelName(p));
 }
 
-type BoneInfo = {
+type BoneData = {
     name: string,
     offset: number[],
     channels: string[],
-    parent: string | null
+    parent: string | null,
+    frameData: number[][]
 }
 
-const parseBVH = (fileContents: string ):string => {
-    const sections = fileContents.split('MOTION');
-    
-    
-    const lines = sections[0].split('\n');
+type AnimationData = {
+    numFrames: number,
+    frameTime: number,
+    frameData: number[][]
+}
 
-    const bones: BoneInfo[] = [];
+const parseSkeleton = (skeletonDataString: string): string => {
+    const lines = skeletonDataString.split('\n');
+
+    const bones: BoneData[] = [];
     let rootName: string;
-    let currBone: BoneInfo | null = null;
-    let currParent: BoneInfo | null = null;
+    let currBone: BoneData | null = null;
+    let currParent: BoneData | null = null;
 
-    let boneLookup = new Map<string, BoneInfo>();
+    let boneLookup = new Map<string, BoneData>();
+
+    const newBone = (boneName: string, parentBone: BoneData | null): BoneData => {
+        return {
+            name: boneName,
+            offset: [],
+            channels: [],
+            parent: (parentBone) ? parentBone.name : null,
+            frameData: []
+        }
+    }
 
     let p;
     lines.forEach(l => {
@@ -59,12 +81,7 @@ const parseBVH = (fileContents: string ):string => {
                 break;
             case 'ROOT':
                 rootName = p[1];
-                currBone = {
-                    name: rootName,
-                    offset: [],
-                    channels: [],
-                    parent: null
-                }
+                currBone = newBone(rootName, null);
                 boneLookup.set(rootName, currBone);
                 currParent = currBone;
                 console.log(currBone);
@@ -73,12 +90,7 @@ const parseBVH = (fileContents: string ):string => {
                 if (currBone) {
                     bones.push(currBone);
                 }
-                currBone = {
-                    name: p[1],
-                    offset: [],
-                    channels: [],
-                    parent: (currParent) ? currParent.name : null
-                }
+                currBone = newBone(p[1], currParent);
                 boneLookup.set(p[1], currBone);
                 currParent = currBone;
                 break;
@@ -87,13 +99,7 @@ const parseBVH = (fileContents: string ):string => {
                     bones.push(currBone);
                 }
                 const endName = (currParent) ? `${currParent.name}-end` : 'end';
-
-                currBone = {
-                    name: endName,
-                    offset: [],
-                    channels: [],
-                    parent: (currParent) ? currParent.name : null
-                }
+                currBone = newBone(endName, currParent);
                 boneLookup.set(endName, currBone);
                 break;
             case '{':
@@ -126,6 +132,50 @@ const parseBVH = (fileContents: string ):string => {
     console.log(bones);
 
     return JSON.stringify(bones, null, 2);
+
+}
+
+const parseAnimation = (animationDataString: string): string => {
+    // const lines = animationDataString.split('\n');
+    const lines = getLines(animationDataString);
+    
+    let numFrames: number = 0;
+    let frameTime: number = 0;
+    let frameData: number[][] = [];
+    
+    lines.forEach(l => {
+        const p = getParts(l);
+        console.log(p[0]);
+        switch (p[0]) {
+            case 'Frames:':
+                numFrames = parseInt(p[1]);
+                break;
+            case 'Frame':
+                frameTime = parseFloat(p[2]);
+                break;
+            default:
+                frameData.push(
+                    getPartsAsFloats(l)
+                );
+                break;
+        }
+    });
+
+    return JSON.stringify({
+        numFrames,
+        frameTime,
+        frameData
+    }, null, 2);
+
+}
+
+const parseBVH = (fileContents: string ):string[] => {
+    const sections = fileContents.split('MOTION');
+
+    const skeleton = parseSkeleton(sections[0]);    
+    const animData = parseAnimation(sections[1]);
+
+    return [skeleton, animData];
 }
 
 export {
