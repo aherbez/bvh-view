@@ -77,6 +77,6 @@ Calling it a night- will setup a proper ThreeJS skeleton and animation channel t
 ---
 
 ### 12:48   
-Couldn't help it- went ahead and set up a proper ThreeJS Skeleton from the data and a SkeletonHelper to visualize it (screen_007.png)
+Couldn't help it- went ahead and set up a proper ThreeJS Skeleton from the data and a SkeletonHelper to visualize it.
 
 ![screenshot 7](https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_007.png)
