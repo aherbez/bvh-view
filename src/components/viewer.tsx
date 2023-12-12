@@ -1,13 +1,26 @@
 import { Canvas } from "@react-three/fiber";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
-
-import { GridHelper } from "three";
+import { parseBVH } from "../parser";
 import '../App.css';
 
 const Viewer: FC = () => {
-    const loadBVH = () => {
 
+    const [output, setOutput] = useState('');
+
+    const loadFile = async (e:any) => {
+        e.preventDefault();
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            if (e.target && e.target.result) {
+                const text = e.target.result.toString();
+                
+                setOutput(text);
+                
+                parseBVH(text);
+            }
+        }
+        reader.readAsText(e.target.files[0]);   
     }
 
     return (
@@ -26,7 +39,15 @@ const Viewer: FC = () => {
 
                 
         <div id="panel-controls">
-            <button onClick={loadBVH}>LOAD</button>
+            <input type="file" onChange={(e) => loadFile(e)} />
+            <br />
+            <textarea
+                rows={30}
+                cols={80}
+                value={output}
+            >
+
+            </textarea>
         </div>
     </div>
     );
