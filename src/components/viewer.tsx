@@ -2,11 +2,13 @@ import { Canvas } from "@react-three/fiber";
 import { FC, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
 import { BVHParser } from "../parser";
+import SkeletonViewer from "./skeletonViewer";
 import '../App.css';
 
 const Viewer: FC = () => {
 
     const [output, setOutput] = useState('');
+    const [bvhData, setBVHData] = useState<BVHParser>();
 
     const loadFile = async (e:any) => {
         e.preventDefault();
@@ -19,6 +21,8 @@ const Viewer: FC = () => {
 
                 bvhParse.parse(text);
                 setOutput(bvhParse.skeletonData);
+
+                setBVHData(bvhParse);
             }
         }
         reader.readAsText(e.target.files[0]);   
@@ -34,6 +38,10 @@ const Viewer: FC = () => {
                     <meshBasicMaterial color={"tomato"} />
                     <boxGeometry args={[1,1,1]} />
                 </mesh>
+
+                <SkeletonViewer 
+                    data={bvhData}
+                />
             </Canvas>
 
         </div>
