@@ -33,7 +33,8 @@ const getChannels = (parts: string[]): string[] => {
 type BoneInfo = {
     name: string,
     offset: number[],
-    channels: string[]
+    channels: string[],
+    parent: string | null
 }
 
 const parseBVH = (fileContents: string ):string => {
@@ -48,6 +49,9 @@ const parseBVH = (fileContents: string ):string => {
     const bones: BoneInfo[] = [];
     let rootName: string;
     let currBone: BoneInfo | null = null;
+    let currParent: BoneInfo | null = null;
+
+    let boneLookup = new Map<string, BoneInfo>();
 
     let p;
     lines.forEach(l => {
@@ -61,8 +65,11 @@ const parseBVH = (fileContents: string ):string => {
                 currBone = {
                     name: rootName,
                     offset: [],
-                    channels: []
+                    channels: [],
+                    parent: null
                 }
+                boneLookup.set(rootName, currBone);
+                currParent = currBone;
                 console.log(currBone);
                 break;
             case 'JOINT':
@@ -72,12 +79,34 @@ const parseBVH = (fileContents: string ):string => {
                 currBone = {
                     name: p[1],
                     offset: [],
-                    channels: []
+                    channels: [],
+                    parent: (currParent) ? currParent.name : null
                 }
+                boneLookup.set(p[1], currBone);
+                currParent = currBone;
+                break;
+            case 'End':
+                if (currBone) {
+                    bones.push(currBone);
+                }
+                const endName = (currParent) ? `${currParent.name}-end` : 'end';
+
+                currBone = {
+                    name: endName,
+                    offset: [],
+                    channels: [],
+                    parent: (currParent) ? currParent.name : null
+                }
+                boneLookup.set(endName, currBone);
                 break;
             case '{':
                 break;
             case '}':
+                // go up in the heirarchy
+                if (currParent && currParent.parent) {
+                    const newParent = boneLookup.get(currParent?.parent);
+                    if (newParent) currParent = newParent;
+                }
                 break;
             case 'OFFSET':
                 if (!currBone) {
@@ -99,7 +128,7 @@ const parseBVH = (fileContents: string ):string => {
     });
     console.log(bones);
 
-    return JSON.stringify(bones);
+    return JSON.stringify(bones, null, 2);
 }
 
 export {
