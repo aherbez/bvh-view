@@ -22,5 +22,14 @@
         "LeftCollar" was parsed after "Head", but is parented to "Hips")
         Starting to think about keeping the channel data straight for frame parsing
 
-10 - 10:30  Break (dad stuff)
+10 - 10:40  Break (dad stuff), plus restarting machine
 
+11:00   Parsing animation frame data (screen_005.png)
+
+11:48   Refactored all the parsing and folded in the frame data onto the bone data
+        (screen_006.png). Now, each bone entry contains an array with its per-frame data. 
+        Re the refactor: I started out with something close to a pure functional approach for the parsing, which was great up to the point of applying
+        the frame data to the bones. At that point, it made sense to switch to a
+        class, rather than passing around the channelIndex->boneID map.
+
+        Calling it a night- will setup a proper ThreeJS skeleton and animation channel tomorrow

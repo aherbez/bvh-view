@@ -1,18 +1,9 @@
-const getLines = (s: string): string[] => {
-    return s.split(/[\n\r]/).filter(s => s !== '');
-}
-
-const getParts = (s: string): string[] => {
-    return s.split(/[\s]/).map(s => s.trim()).filter(s => s !== '');
-}
-
-const getPartsAsFloats = (s: string): number[] => {
-    return getParts(s).map(s => parseFloat(s));
-}
-
-const getVector = (parts: string[]): number[] => {
-    return parts.map(p => parseFloat(p));
-}
+import {
+    getLines,
+    getParts,
+    getPartsAsFloats,
+    getVector
+} from './utils'
 
 // TODO better return type than string
 const normalizeChannelName = (name: string): string => {
@@ -39,10 +30,11 @@ const getChannels = (parts: string[]): string[] => {
 }
 
 type BoneData = {
+    id: number,
     name: string,
     offset: number[],
     channels: string[],
-    parent: string | null,
+    parent: number,
     frameData: number[][]
 }
 
@@ -52,132 +44,184 @@ type AnimationData = {
     frameData: number[][]
 }
 
-const parseSkeleton = (skeletonDataString: string): string => {
-    const lines = skeletonDataString.split('\n');
 
-    const bones: BoneData[] = [];
-    let rootName: string;
-    let currBone: BoneData | null = null;
-    let currParent: BoneData | null = null;
+class BVHParser {
+    bones: Map<number, BoneData>;
+    channelLookup: Map<number, number>;
+    animationData: AnimationData | null;
+    frameTime: number;
+    numFrames: number;
 
-    let boneLookup = new Map<string, BoneData>();
-
-    const newBone = (boneName: string, parentBone: BoneData | null): BoneData => {
-        return {
-            name: boneName,
-            offset: [],
-            channels: [],
-            parent: (parentBone) ? parentBone.name : null,
-            frameData: []
-        }
+    constructor() {
+        this.bones = new Map();
+        this.channelLookup = new Map();
+        this.animationData = null;
+        this.frameTime = 0;
+        this.numFrames = 0;
     }
 
-    let p;
-    lines.forEach(l => {
-        p = getParts(l);
-        console.log(p[0]);
-        switch (p[0]) {
-            case 'HEIRARCHY':
-                break;
-            case 'ROOT':
-                rootName = p[1];
-                currBone = newBone(rootName, null);
-                boneLookup.set(rootName, currBone);
-                currParent = currBone;
-                console.log(currBone);
-                break;
-            case 'JOINT':
-                if (currBone) {
-                    bones.push(currBone);
-                }
-                currBone = newBone(p[1], currParent);
-                boneLookup.set(p[1], currBone);
-                currParent = currBone;
-                break;
-            case 'End':
-                if (currBone) {
-                    bones.push(currBone);
-                }
-                const endName = (currParent) ? `${currParent.name}-end` : 'end';
-                currBone = newBone(endName, currParent);
-                boneLookup.set(endName, currBone);
-                break;
-            case '{':
-                break;
-            case '}':
-                // go up in the heirarchy
-                if (currParent && currParent.parent) {
-                    const newParent = boneLookup.get(currParent?.parent);
-                    if (newParent) currParent = newParent;
-                }
-                break;
-            case 'OFFSET':
-                if (!currBone) {
-                    console.error('parse error');
-                    return;
-                }
-                currBone.offset = getVector(p.slice(1));
-                break;
-            case 'CHANNELS':
-                if (!currBone) {
-                    console.error('parse error');
-                    return;
-                }
-                currBone.channels = getChannels(p);
-                break;
-            default:
-                break;
-        }
-    });
-    console.log(bones);
+    parseSkeleton (skeletonDataString: string) {
+        const lines = skeletonDataString.split('\n');
 
-    return JSON.stringify(bones, null, 2);
+        // const bones: BoneData[] = [];
+        
+        let currBone: BoneData | null = null;
+        let currParent: BoneData | null = null;
 
-}
-
-const parseAnimation = (animationDataString: string): string => {
-    // const lines = animationDataString.split('\n');
-    const lines = getLines(animationDataString);
+        let currBoneID = 1;
+        let boneLookup = new Map<string, BoneData>();
     
-    let numFrames: number = 0;
-    let frameTime: number = 0;
-    let frameData: number[][] = [];
+        let channelCount = 0;
     
-    lines.forEach(l => {
-        const p = getParts(l);
-        console.log(p[0]);
-        switch (p[0]) {
-            case 'Frames:':
-                numFrames = parseInt(p[1]);
-                break;
-            case 'Frame':
-                frameTime = parseFloat(p[2]);
-                break;
-            default:
-                frameData.push(
-                    getPartsAsFloats(l)
-                );
-                break;
+        const newBone = (boneName: string, parentBone: BoneData | null): BoneData => {
+            const b = {
+                id: currBoneID,
+                name: boneName,
+                offset: [],
+                channels: [],
+                parent: (parentBone) ? parentBone.id : -1,
+                frameData: []
+            }
+            currBoneID++;
+            return b;
         }
-    });
+    
+        let p;
+        lines.forEach(l => {
+            p = getParts(l);
+            switch (p[0]) {
+                case 'HEIRARCHY':
+                    break;
+                case 'ROOT':
+                    currBone = newBone(p[1], null);
+                    boneLookup.set(p[1], currBone);
+                    this.bones.set(currBone.id, currBone);
+                    currParent = currBone;
+                    
+                    break;
+                case 'JOINT':
+                    /*
+                    if (currBone) {
+                        bones.push(currBone);
+                    }
+                    */
+                    currBone = newBone(p[1], currParent);
+                    boneLookup.set(p[1], currBone);
+                    this.bones.set(currBone.id, currBone);
+                    currParent = currBone;
+                    break;
+                case 'End':
+                    /*
+                    if (currBone) {
+                        bones.push(currBone);
+                    }
+                    */
+                    const endName = (currParent) ? `${currParent.name}-end` : 'end';
+                    currBone = newBone(endName, currParent);
+                    this.bones.set(currBone.id, currBone);
+                    boneLookup.set(endName, currBone);
+                    break;
+                case '{':
+                    break;
+                case '}':
+                    // go up in the heirarchy
+                    if (currParent && currParent.parent) {
+                        const newParent = this.bones.get(currParent?.parent);
+                        if (newParent) currParent = newParent;
+                    }
+                    break;
+                case 'OFFSET':
+                    if (!currBone) {
+                        console.error('parse error');
+                        return;
+                    }
+                    currBone.offset = getVector(p.slice(1));
+                    break;
+                case 'CHANNELS':
+                    if (!currBone) {
+                        console.error('parse error');
+                        return;
+                    }
+                    currBone.channels = getChannels(p);
+                    for (let i=0; i < currBone.channels.length; i++) {
+                        this.channelLookup.set(channelCount + i, currBone.id);
+                    }
+                    channelCount += currBone.channels.length;
+                    break;
+                default:
+                    break;
+            }
+        });
+        console.log(this.bones);
+        console.log(this.channelLookup);
+    }
 
-    return JSON.stringify({
-        numFrames,
-        frameTime,
-        frameData
-    }, null, 2);
+    parseAnimation (animationDataString: string) {
+        // const lines = animationDataString.split('\n');
+        const lines = getLines(animationDataString);
+        
+        let currFrame = 0;
+        let currBoneID = -1;
+        let currBone: BoneData | undefined;
 
-}
+        lines.forEach(l => {
+            const p = getParts(l);
+            switch (p[0]) {
+                case 'Frames:':
+                    this.numFrames = parseInt(p[1]);
+                    break;
+                case 'Frame':
+                    this.frameTime = parseFloat(p[2]);
+                    break;
+                default:
+                    const vals = getPartsAsFloats(l);
+                    vals.forEach((v, i) => {
+                        
+                        let boneID = this.channelLookup.get(i);
+                        
+                        // only grab the next bone if we actually need to
+                        if (boneID && boneID !== currBoneID) {
+                            currBone = this.bones.get(boneID);
+                            if (currBone) {
+                                currBone.frameData[currFrame] = [];
+                            }
+                            currBoneID = boneID;
+                        }
+                        if (currBone) {
+                            currBone.frameData[currFrame].push(v);
+                        }
+                    });
 
-const parseBVH = (fileContents: string ):string[] => {
-    const sections = fileContents.split('MOTION');
+                    currFrame++;
 
-    const skeleton = parseSkeleton(sections[0]);    
-    const animData = parseAnimation(sections[1]);
+                    break;
+            }
+        });    
+    }
+    
+    parse (fileContents: string) {
+        this.bones.clear();
+        this.channelLookup.clear();
 
-    return [skeleton, animData];
+        const sections = fileContents.split('MOTION');
+
+        this.parseSkeleton(sections[0]);    
+        this.parseAnimation(sections[1]);
+
+        console.log(this.bones);
+    }
+
+    get skeletonData (): string {
+        const boneData = Array.from(this.bones.entries());
+
+        return JSON.stringify(boneData, null, 2);
+    }
+
+    get frameData ():string {
+        return JSON.stringify(this.animationData, null, 2);
+    }
 }
 
 export {
-    parseBVH
+    BVHParser
 }
