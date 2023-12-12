@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { BVHData } from "../parser";
-import { buildSkeleton, SkeletonResult } from "../skeleton_utils";
+import { BVHData } from "../parser/parser";
+import { buildSkeleton, SkeletonResult } from "../parser/skeleton_utils";
 
 export interface SkeletonViewerProps {
     data: BVHData | undefined

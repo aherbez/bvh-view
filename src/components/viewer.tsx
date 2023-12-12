@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { FC, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
-import { BVHData } from "../parser";
+import { BVHData } from "../parser/parser";
 import SkeletonViewer from "./skeletonViewer";
 import '../App.css';
 
