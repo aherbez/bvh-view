@@ -33,10 +33,6 @@ const Viewer: FC = () => {
             <Canvas>
                 <OrbitControls />
                 <gridHelper />
-                <mesh>
-                    <meshBasicMaterial color={"tomato"} />
-                    <boxGeometry args={[1,1,1]} />
-                </mesh>
 
                 <SkeletonViewer 
                     data={bvhData}
