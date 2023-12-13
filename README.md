@@ -80,3 +80,16 @@ Calling it a night- will setup a proper ThreeJS skeleton and animation channel t
 Couldn't help it- went ahead and set up a proper ThreeJS Skeleton from the data and a SkeletonHelper to visualize it.
 
 ![screenshot 7](https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_007.png)
+
+
+## 2023/12/12
+
+Jumped back into it to add animation
+
+### 7:38
+
+Added playback for rotational animation
+
+![screenshot 8](https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_008.png)
+
+
