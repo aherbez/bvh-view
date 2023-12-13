@@ -88,7 +88,8 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
             const track = new THREE.QuaternionKeyframeTrack(
                 `${child?.uuid}.quaternion`,
                 times, 
-                values
+                values, 
+                THREE.InterpolateSmooth
             );
 
             tracks.push(track);
