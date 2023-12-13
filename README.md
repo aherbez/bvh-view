@@ -93,3 +93,7 @@ Added playback for rotational animation
 ![screenshot 8](https://github.com/aherbez/bvh-view/blob/main/screenshots/screen_008.png)
 
 
+### 7:55
+
+Added playback for translation tracks as well as rotation
+

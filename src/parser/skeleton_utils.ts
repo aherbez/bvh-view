@@ -8,7 +8,7 @@ export type SkeletonResult = {
     mixer: THREE.AnimationMixer
 }
 
-// const posChannels = ['pX', 'pY', 'pZ'];
+const posChannels = ['pX', 'pY', 'pZ'];
 const rotChannels = ['rX', 'rY', 'rZ'];
 
 const findOffsets = (channels: string[], channelNames: string[]): number[] | null => {
@@ -27,7 +27,7 @@ const quatFromFrame = (rotX: number, rotY: number, rotZ: number): THREE.Quaterni
         degToRad(rotX),
         degToRad(rotY),
         degToRad(rotZ), 
-        'XYZ'
+        'ZXY'
     );
     q.setFromEuler(e);
 
@@ -94,12 +94,30 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
             tracks.push(track);
         }
 
+        const posOffsets = findOffsets(bData.channels, posChannels);
+        if (posOffsets) {
+            const values = [];
+            for (let i=0; i < bData.frameData.length; i++) {
+                values.push(
+                    bData.frameData[i][posOffsets[0]],
+                    bData.frameData[i][posOffsets[1]],
+                    bData.frameData[i][posOffsets[2]]
+                );
+            }
+
+            const track = new THREE.VectorKeyframeTrack(
+                `${child?.uuid}.position`,
+                times,
+                values
+            );
+
+            tracks.push(track);
+        }
+
     });
 
     const skeleton = new THREE.Skeleton(bones);
     const helper = new THREE.SkeletonHelper(bones[0]);
-
-    console.log(skeleton);
 
     const mixer = new THREE.AnimationMixer(bones[0]);
     const animClip = new THREE.AnimationClip(
