@@ -42,10 +42,15 @@ const Viewer: FC = () => {
 
                 
         <div id="panel-controls">
+            <div>
+                This is a simple viewer / parser for BVH files. If you want to try it, you'll need a BVH file. Once you have one, use the button below to load it. <br />
+                The data is parsed and loaded into an intermediate format. That intermediate data is displayed below as text, and used to create a skeleton and animation tracks. The skeleton loads into the scene at left with the animation playing, though you might need to move the camera around a big to see it.
+            </div>
+
             <input type="file" onChange={(e) => loadFile(e)} />
             <br />
             <textarea
-                rows={40}
+                rows={35}
                 cols={80}
                 defaultValue={output}
             />
