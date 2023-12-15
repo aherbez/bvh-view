@@ -97,3 +97,14 @@ Added playback for rotational animation
 
 Added playback for translation tracks as well as rotation
 
+## 2023/12/14
+
+### 8:08
+
+Coming back for some general code cleanup
+
+### 8:52
+
+Some various cleanup, mainly combining the parseSkeleton and parseAnimation functions in BVHData to a single parseData function. This has the downside of making things slightly less readable, but the benefit of not running through the data multiple times.
+
+

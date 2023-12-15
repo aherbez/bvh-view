@@ -11,6 +11,9 @@ export type SkeletonResult = {
 const posChannels = ['pX', 'pY', 'pZ'];
 const rotChannels = ['rX', 'rY', 'rZ'];
 
+// will return either:
+// - the offsets needed to index into the given channels in the given order, OR
+// - null if the given channels don't exist for this bone
 const findOffsets = (channels: string[], channelNames: string[]): number[] | null => {
     const indices = [];
     for (let i=0; i < channelNames.length; i++) {
@@ -64,13 +67,9 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
         let parent = boneLookup.get(bData.parent);
 
         if (!!parent && !!child) {
-            // console.log(child.name, '->', parent.name);
             parent.add(child);
         }
-   
-        // make an animation track
-        console.log('channels', bData.channels, bData.frameData);
-        
+           
         // maybe make rotation track
         const rotOffsets = findOffsets(bData.channels, rotChannels);
         if (rotOffsets) {
@@ -88,13 +87,13 @@ const buildSkeleton = (data: BVHData): SkeletonResult => {
             const track = new THREE.QuaternionKeyframeTrack(
                 `${child?.uuid}.quaternion`,
                 times, 
-                values, 
-                THREE.InterpolateSmooth
+                values 
             );
 
             tracks.push(track);
         }
 
+        // maybe make a translation track
         const posOffsets = findOffsets(bData.channels, posChannels);
         if (posOffsets) {
             const values = [];

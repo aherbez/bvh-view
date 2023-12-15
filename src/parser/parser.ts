@@ -1,5 +1,4 @@
 import {
-    getLines,
     getParts,
     getPartsAsFloats,
     getVector
@@ -61,42 +60,38 @@ class BVHData {
             frameData: []
         }
     
-        this.bones.clear();
-        this.channelLookup.clear();
+        // const sections = fileContents.split('MOTION');
 
-        const sections = fileContents.split('MOTION');
+        this.parseData(fileContents);
 
-        this.parseSkeleton(sections[0]);    
-        this.parseAnimation(sections[1]);
+        // this.parseSkeleton(sections[0]);    
+        // this.parseAnimation(sections[1]);
+    
     }
 
+    createBone (boneName: string, parentBone: BoneData | null, currBoneID: number): BoneData {
+        const b = {
+            id: currBoneID,
+            name: boneName,
+            offset: [],
+            channels: [],
+            parent: (parentBone) ? parentBone.id : -1,
+            frameData: []
+        }
+        this.bones.set(currBoneID, b);
+        return b;
+    }
 
-    parseSkeleton (skeletonDataString: string) {
-        const lines = skeletonDataString.split('\n');
+    parseData (skeletonDataString: string) {
+        const lines = skeletonDataString.split('\n').filter(l => l !== '');
 
-        // const bones: BoneData[] = [];
-        
-        let currBone: BoneData | null = null;
+        let currBone: BoneData | undefined;
         let currParent: BoneData | null = null;
 
-        let currBoneID = 1;
-        let boneLookup = new Map<string, BoneData>();
-    
+        let currBoneID = 1;    
         let channelCount = 0;
-    
-        const newBone = (boneName: string, parentBone: BoneData | null): BoneData => {
-            const b = {
-                id: currBoneID,
-                name: boneName,
-                offset: [],
-                channels: [],
-                parent: (parentBone) ? parentBone.id : -1,
-                frameData: []
-            }
-            currBoneID++;
-            return b;
-        }
-    
+        let currFrame = 0;
+
         let p;
         lines.forEach(l => {
             p = getParts(l);
@@ -104,19 +99,24 @@ class BVHData {
                 case '{':       // handled by the JOINT/ROOT/End Site lines 
                 case 'HEIRARCHY':
                     break;
+                case 'MOTION':
+                    currBoneID = -1; 
+                    currFrame = 0;
+                    break;
                 case 'ROOT':
                 case 'JOINT':
-                    currBone = newBone(p[1], currParent);
-                    boneLookup.set(p[1], currBone);
-                    this.bones.set(currBone.id, currBone);
-                    currParent = currBone;
+                    currBone = this.createBone(p[1], currParent, currBoneID);
+                    currBoneID++;
+                    currParent = currBone;                    
+                    
                     break;
                 case 'End':
                     const endName = (currParent) ? `${currParent.name}-end` : 'end';
-                    currBone = newBone(endName, currParent);
-                    this.bones.set(currBone.id, currBone);
-                    boneLookup.set(endName, currBone);
+                    
+                    currBone = this.createBone(endName, currParent, currBoneID);
+                    currBoneID++;
                     currParent = currBone;
+                    
                     break;
                 case '}':
                     // go up in the heirarchy
@@ -143,23 +143,6 @@ class BVHData {
                     }
                     channelCount += currBone.channels.length;
                     break;
-                default:
-                    break;
-            }
-        });
-    }
-
-    parseAnimation (animationDataString: string) {
-        // const lines = animationDataString.split('\n');
-        const lines = getLines(animationDataString);
-        
-        let currFrame = 0;
-        let currBoneID = -1;
-        let currBone: BoneData | undefined;
-
-        lines.forEach(l => {
-            const p = getParts(l);
-            switch (p[0]) {
                 case 'Frames:':
                     this.animationData.numFrames = parseInt(p[1]);
                     break;
@@ -186,12 +169,10 @@ class BVHData {
                             currBone.frameData[currFrame].push(v);
                         }
                     });
-
                     currFrame++;
-
                     break;
             }
-        });    
+        });
     }
     
     get skeletonData (): string {

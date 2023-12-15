@@ -20,7 +20,6 @@ const Viewer: FC = () => {
                 const bvhData = new BVHData(text);
 
                 setOutput(bvhData.skeletonData);
-
                 setBVHData(bvhData);
             }
         }
