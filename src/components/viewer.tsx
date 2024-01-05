@@ -31,7 +31,7 @@ const Viewer: FC = () => {
         <div id="main-stage">
             <Canvas>
                 <OrbitControls />
-                <gridHelper />
+                <gridHelper args={[100, 10]}/>
 
                 <SkeletonViewer 
                     data={bvhData}
